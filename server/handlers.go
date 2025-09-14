@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"strconv"
@@ -14,7 +15,26 @@ func test(w http.ResponseWriter, r *http.Request) {
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Home Page...\n"))
+
+	w.Header().Add("server", "GO")
+
+	templates := []string{
+		"./ui/html/pages/home.tmpl",
+		"./ui/html/pages/base.tmpl",
+		"./ui/html/partials/nav.tmpl",
+	}
+	tmpl, err := template.ParseFiles(templates...) // path relative to root dir snippetbox
+	if err != nil {
+		log.Printf(err.Error(), "\n")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.ExecuteTemplate(w, "base", nil)
+	if err != nil {
+		log.Printf(err.Error(), "\n")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
 
 func snippetView(w http.ResponseWriter, r *http.Request) {
