@@ -1,28 +1,69 @@
 package main
 
 import (
-	"log"
+	"database/sql"
+	"flag"
+	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
+type Application struct {
+	logger *slog.Logger
+}
+
 func main() {
-	wd, _ := os.Getwd()
-	log.Printf("working dir: %s", wd)
-	log.Println("Snipppetbox server started on :8080")
+	// server setup
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /{$}", home) // GET method also works with HEAD only one method is allowed in this form of definition
-	mux.HandleFunc("GET /snippet/view/{id}", snippetView)
-	mux.HandleFunc("GET /snippet/create", snippetCreate)
-	mux.HandleFunc("POST /snippet/create", snippetCreatePost)
+	// database
+	userName := "app"
+	password := "pass"
+	dbHost := "192.168.0.134"
+	dbName := "snippetbox"
 
-	// test endpoint
-	mux.HandleFunc("/test", test)
+	// get configs
+	addr := flag.String("addr", ":8080", "http server address:port")
+	dsn := flag.String("dsn", fmt.Sprintf("%s:%s@%s/%s?parseTime=true", userName, password, dbHost, dbName), "db connection string (dsn)")
+	flag.Parse()
 
-	// file server
-	fileserver := http.FileServer(http.Dir("./ui/static"))
-	mux.Handle("/static/", http.StripPrefix("/static", fileserver))
+	var loggerOptions *slog.HandlerOptions = &slog.HandlerOptions{
+		AddSource: false,
+	}
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, loggerOptions))
 
-	check(http.ListenAndServe(":8080", mux))
+	app := Application{
+		logger: logger,
+	}
+
+	db, err := openDB(*dsn)
+
+	if err != nil {
+		app.logger.Error(err.Error())
+		os.Exit(1)
+	}
+
+	defer db.Close()
+
+	app.logger.Info("server started", slog.Any("address", *addr))
+
+	app.check(http.ListenAndServe(*addr, app.routes()))
+}
+
+func openDB(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Ping()
+
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	return db, nil
 }

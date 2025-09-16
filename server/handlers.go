@@ -3,18 +3,18 @@ package main
 import (
 	"fmt"
 	"html/template"
-	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 )
 
-func test(w http.ResponseWriter, r *http.Request) {
+func (app *Application) test(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", "snippetBox")
 	w.Header().Set("erver", "GO")
 	w.Write([]byte(r.PathValue("path")))
 }
 
-func home(w http.ResponseWriter, r *http.Request) {
+func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("server", "GO")
 
@@ -25,33 +25,33 @@ func home(w http.ResponseWriter, r *http.Request) {
 	}
 	tmpl, err := template.ParseFiles(templates...) // path relative to root dir snippetbox
 	if err != nil {
-		log.Printf(err.Error(), "\n")
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		app.serverError(w, r, err)
 		return
 	}
 
 	err = tmpl.ExecuteTemplate(w, "base", nil)
 	if err != nil {
-		log.Printf(err.Error(), "\n")
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		app.serverError(w, r, err)
 	}
 }
 
-func snippetView(w http.ResponseWriter, r *http.Request) {
+func (app *Application) snippetView(w http.ResponseWriter, r *http.Request) {
 	// check valid id
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil || id < 1 {
-		log.Printf("Error: invalid snippet id {%s}\n", r.PathValue("id"))
+		app.logger.Error("invalid snippet id", slog.Any("id", r.PathValue("id")))
 		http.NotFound(w, r)
 		return
 	}
 
 	w.Write([]byte(fmt.Sprintf("view snippet #%d...\n", id)))
 }
-func snippetCreate(w http.ResponseWriter, r *http.Request) {
+
+func (app *Application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("display new snippept form...\n"))
 }
-func snippetCreatePost(w http.ResponseWriter, r *http.Request) {
+
+func (app *Application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("save new snippet to DB...\n"))
 }
