@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -9,61 +8,53 @@ import (
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/mahmoud-shabban/snippetbox/internal/models"
 )
 
 type Application struct {
-	logger *slog.Logger
+	logger   *slog.Logger
+	snippets *models.SnippetModel
 }
 
 func main() {
-	// server setup
+
+	// configs
 
 	// database
 	userName := "app"
 	password := "pass"
-	dbHost := "192.168.0.134"
+	dbHost := "127.0.0.1" //"192.168.0.134"
 	dbName := "snippetbox"
 
-	// get configs
+	// server
 	addr := flag.String("addr", ":8080", "http server address:port")
-	dsn := flag.String("dsn", fmt.Sprintf("%s:%s@%s/%s?parseTime=true", userName, password, dbHost, dbName), "db connection string (dsn)")
+	dsn := flag.String("dsn", fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true", userName, password, dbHost, dbName), "db connection string (dsn)")
 	flag.Parse()
 
+	// logger
 	var loggerOptions *slog.HandlerOptions = &slog.HandlerOptions{
 		AddSource: false,
 	}
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, loggerOptions))
 
-	app := Application{
-		logger: logger,
-	}
-
+	// database
 	db, err := openDB(*dsn)
 
 	if err != nil {
-		app.logger.Error(err.Error())
+		logger.Error(err.Error(), slog.Any("source", "database"))
 		os.Exit(1)
 	}
-
 	defer db.Close()
 
+	// Initialize the APP and inject its dependencies
+	app := Application{
+		logger:   logger,
+		snippets: &models.SnippetModel{DB: db},
+	}
+
+	app.logger.Info("successfuly connected to database")
 	app.logger.Info("server started", slog.Any("address", *addr))
 
+	// Start the Server
 	app.check(http.ListenAndServe(*addr, app.routes()))
-}
-
-func openDB(dsn string) (*sql.DB, error) {
-	db, err := sql.Open("mysql", dsn)
-	if err != nil {
-		return nil, err
-	}
-
-	err = db.Ping()
-
-	if err != nil {
-		db.Close()
-		return nil, err
-	}
-
-	return db, nil
 }

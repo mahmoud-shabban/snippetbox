@@ -1,11 +1,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"log/slog"
 	"net/http"
 	"strconv"
+
+	"github.com/mahmoud-shabban/snippetbox/internal/models"
 )
 
 func (app *Application) test(w http.ResponseWriter, r *http.Request) {
@@ -44,14 +47,39 @@ func (app *Application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte(fmt.Sprintf("view snippet #%d...\n", id)))
+	snippet, err := app.snippets.Get(id)
+
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+
+	fmt.Fprintf(w, "%+v", snippet)
+	// w.Write([]byte(fmt.Sprintf("view snippet #%d...\n", id)))
 }
 
 func (app *Application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("display new snippept form...\n"))
+
 }
 
 func (app *Application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("save new snippet to DB...\n"))
+	// w.WriteHeader(http.StatusCreated)
+	// w.Write([]byte("save new snippet to DB...\n"))
+	title := "new snail"
+	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
+	expires := 10
+
+	id, err := app.snippets.Insert(title, content, expires)
+
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 }
