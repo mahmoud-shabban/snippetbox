@@ -13,7 +13,7 @@ import (
 func (app *Application) test(w http.ResponseWriter, r *http.Request) {
 	// w.Header().Set("Server", "snippetBox")
 	// w.Header().Set("erver", "GO")
-	panic("Server is panicing, don't worry!!")
+	// panic("Server is panicing, don't worry!!")
 	w.Write([]byte(r.PathValue("path")))
 }
 
