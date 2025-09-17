@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"html/template"
 	"log/slog"
 	"net/http"
 	"os"
@@ -12,8 +13,9 @@ import (
 )
 
 type Application struct {
-	logger   *slog.Logger
-	snippets *models.SnippetModel
+	logger        *slog.Logger
+	snippets      *models.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 func main() {
@@ -46,13 +48,21 @@ func main() {
 	}
 	defer db.Close()
 
+	// initialize template cache cache
+	cache, err := newTemplateCache()
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
 	// Initialize the APP and inject its dependencies
 	app := Application{
-		logger:   logger,
-		snippets: &models.SnippetModel{DB: db},
+		logger:        logger,
+		snippets:      &models.SnippetModel{DB: db},
+		templateCache: cache,
 	}
 
-	app.logger.Info("successfuly connected to database")
+	app.logger.Info("successfully connected to database")
+	app.logger.Info("successfully initialized template cache")
 	app.logger.Info("server started", slog.Any("address", *addr))
 
 	// Start the Server

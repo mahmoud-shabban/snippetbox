@@ -24,8 +24,8 @@ func (m *SnippetModel) Insert(title, content string, expires int) (int, error) {
 
 	// create sql statement with placeholder for safer execution
 	stmt := `
-			INSERT INTO snippets (title, content, created, expires)
-			VALUES(?, ?, Now(), DATE_ADD(NOW(), INTERVAL ? DAY)
+			INSERT INTO snippets (title, content, created, expires) 
+			VALUES(?, ?, Now(), DATE_ADD(NOW(), INTERVAL ? DAY))
 			`
 	result, err := m.DB.Exec(stmt, title, content, expires) // result implements result interface from database/sql pkg
 	if err != nil {

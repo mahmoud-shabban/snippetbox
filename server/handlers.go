@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"html/template"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -28,23 +27,27 @@ func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := templateData{Snippets: snippets}
+	data := app.newTemplateData()
+	data.Snippets = snippets
+	// data := templateData{Snippets: snippets}
 
-	templates := []string{
-		"./ui/html/base.tmpl.html",
-		"./ui/html/pages/home.tmpl.html",
-		"./ui/html/partials/nav.tmpl.html",
-	}
-	tmpl, err := template.ParseFiles(templates...) // path relative to root dir snippetbox
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
+	app.render(w, r, http.StatusOK, "home", data)
 
-	err = tmpl.ExecuteTemplate(w, "base", data)
-	if err != nil {
-		app.serverError(w, r, err)
-	}
+	// templates := []string{
+	// 	"./ui/html/base.tmpl.html",
+	// 	"./ui/html/pages/home.tmpl.html",
+	// 	"./ui/html/partials/nav.tmpl.html",
+	// }
+	// tmpl, err := template.ParseFiles(templates...) // path relative to root dir snippetbox
+	// if err != nil {
+	// 	app.serverError(w, r, err)
+	// 	return
+	// }
+
+	// err = tmpl.ExecuteTemplate(w, "base", data)
+	// if err != nil {
+	// 	app.serverError(w, r, err)
+	// }
 
 }
 
@@ -68,27 +71,31 @@ func (app *Application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := templateData{Snippet: snippet}
+	data := app.newTemplateData()
+	data.Snippet = snippet
+	// data := templateData{Snippet: snippet}
 
-	templates := []string{
-		"./ui/html/base.tmpl.html",
-		"./ui/html/partials/nav.tmpl.html",
-		"./ui/html/pages/view.tmpl.html",
-	}
+	app.render(w, r, http.StatusOK, "view", data)
 
-	tmp, err := template.ParseFiles(templates...)
+	// templates := []string{
+	// 	"./ui/html/base.tmpl.html",
+	// 	"./ui/html/partials/nav.tmpl.html",
+	// 	"./ui/html/pages/view.tmpl.html",
+	// }
 
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
+	// tmpl, err := template.ParseFiles(templates...)
 
-	err = tmp.ExecuteTemplate(w, "base", data)
+	// if err != nil {
+	// 	app.serverError(w, r, err)
+	// 	return
+	// }
 
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
+	// err = tmpl.ExecuteTemplate(w, "base", data)
+
+	// if err != nil {
+	// 	app.serverError(w, r, err)
+	// 	return
+	// }
 	// fmt.Fprintf(w, "%+v", snippet)
 	// w.Write([]byte(fmt.Sprintf("view snippet #%d...\n", id)))
 }
