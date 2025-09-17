@@ -27,7 +27,7 @@ func (app *Application) serverError(w http.ResponseWriter, r *http.Request, err 
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 
-func (app *Application) clientError(w http.ResponseWriter, r *http.Request, status int) {
+func (app *Application) clientError(w http.ResponseWriter, status int) {
 	http.Error(w, http.StatusText(status), status)
 }
 
@@ -83,5 +83,5 @@ func (app *Application) newTemplateData() templateData {
 }
 
 func humanDate(t time.Time) string {
-	return t.Format("02 Feb 2007 at 13:05")
+	return t.Format("02 Jan 2006 at 15:04")
 }

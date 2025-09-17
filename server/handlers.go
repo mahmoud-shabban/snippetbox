@@ -6,9 +6,18 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
+	"unicode/utf8"
 
 	"github.com/mahmoud-shabban/snippetbox/internal/models"
 )
+
+type snippetCreateForm struct {
+	Title       string
+	Content     string
+	Expires     int
+	Validations map[string]string
+}
 
 func (app *Application) test(w http.ResponseWriter, r *http.Request) {
 	// w.Header().Set("Server", "snippetBox")
@@ -102,22 +111,67 @@ func (app *Application) snippetView(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Application) snippetCreate(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("display new snippept form...\n"))
+	// w.Write([]byte("display new snippept form...\n"))
+	data := app.newTemplateData()
+	form := snippetCreateForm{
+		Expires: 1,
+	}
 
+	data.Form = form
+	app.render(w, r, http.StatusOK, "create", data)
 }
 
 func (app *Application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
 	// w.WriteHeader(http.StatusCreated)
 	// w.Write([]byte("save new snippet to DB...\n"))
-	title := "new snail"
-	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
-	expires := 10
+	// title := "new snail"
+	// content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
+	// expires := 10
 
-	id, err := app.snippets.Insert(title, content, expires)
+	err := r.ParseForm()
 
 	if err != nil {
-		app.serverError(w, r, err)
+		app.clientError(w, http.StatusBadRequest)
 		return
+	}
+
+	// extracting form data and making validations
+	formData := snippetCreateForm{}
+	// validations := make(map[string]string)
+	formData.Title = r.PostForm.Get("title")
+	formData.Content = r.PostForm.Get("content")
+	formData.Expires, err = strconv.Atoi(r.PostForm.Get("expires"))
+	formData.Validations = make(map[string]string)
+
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	if strings.TrimSpace(formData.Title) == "" {
+		formData.Validations["title"] = "title cannot be blank"
+	} else if utf8.RuneCountInString(formData.Title) > 100 {
+		formData.Validations["title"] = "title cannot be more than 100 characters long"
+	}
+
+	if strings.TrimSpace(formData.Content) == "" {
+		formData.Validations["content"] = "content cannot be blank"
+	}
+
+	if formData.Expires != 1 && formData.Expires != 7 && formData.Expires != 365 {
+		formData.Validations["expires"] = "expires must be 1, 7 or 365"
+	}
+
+	if len(formData.Validations) > 0 {
+		data := app.newTemplateData()
+		data.Form = formData
+		app.render(w, r, http.StatusUnprocessableEntity, "create", data)
+		return
+	}
+
+	id, err := app.snippets.Insert(formData.Title, formData.Content, formData.Expires)
+	if err != nil {
+		app.serverError(w, r, err)
 	}
 
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
