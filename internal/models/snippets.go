@@ -23,7 +23,10 @@ type SnippetModel struct {
 func (m *SnippetModel) Insert(title, content string, expires int) (int, error) {
 
 	// create sql statement with placeholder for safer execution
-	stmt := "INSERT INTO snippets (title, content, created, expires) VALUES(?, ?, Now(), DATE_ADD(NOW(), INTERVAL ? DAY))"
+	stmt := `
+			INSERT INTO snippets (title, content, created, expires)
+			VALUES(?, ?, Now(), DATE_ADD(NOW(), INTERVAL ? DAY)
+			`
 	result, err := m.DB.Exec(stmt, title, content, expires) // result implements result interface from database/sql pkg
 	if err != nil {
 		return 0, err
@@ -38,7 +41,10 @@ func (m *SnippetModel) Insert(title, content string, expires int) (int, error) {
 }
 
 func (m *SnippetModel) Get(id int) (Snippet, error) {
-	stmt := "SELECT id, title, content, created, expires FROM snippets WHERE expires > NOW() AND id = ?"
+	stmt := `
+			SELECT id, title, content, created, expires
+			FROM snippets
+			WHERE expires > NOW() AND id = ?`
 
 	row := m.DB.QueryRow(stmt, id)
 	snippet := Snippet{}
@@ -56,5 +62,35 @@ func (m *SnippetModel) Get(id int) (Snippet, error) {
 }
 
 func (m *SnippetModel) Latest() ([]Snippet, error) {
-	return nil, nil
+
+	stmt := `
+			SELECT id, title, content, created, expires 
+			FROM snippets
+			WHERE expires > NOW()
+			ORDER BY created DESC
+			LIMIT 10
+			`
+	rows, err := m.DB.Query(stmt)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	snippets := make([]Snippet, 0)
+
+	for rows.Next() {
+		var s Snippet
+		if err := rows.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires); err != nil {
+			return nil, err
+		}
+
+		snippets = append(snippets, s)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return snippets, nil
 }

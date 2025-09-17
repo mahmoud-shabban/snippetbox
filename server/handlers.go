@@ -21,10 +21,19 @@ func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("server", "GO")
 
+	snippets, err := app.snippets.Latest()
+
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	data := templateData{Snippets: snippets}
+
 	templates := []string{
-		"./ui/html/pages/home.tmpl",
-		"./ui/html/pages/base.tmpl",
-		"./ui/html/partials/nav.tmpl",
+		"./ui/html/base.tmpl.html",
+		"./ui/html/pages/home.tmpl.html",
+		"./ui/html/partials/nav.tmpl.html",
 	}
 	tmpl, err := template.ParseFiles(templates...) // path relative to root dir snippetbox
 	if err != nil {
@@ -32,10 +41,11 @@ func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = tmpl.ExecuteTemplate(w, "base", nil)
+	err = tmpl.ExecuteTemplate(w, "base", data)
 	if err != nil {
 		app.serverError(w, r, err)
 	}
+
 }
 
 func (app *Application) snippetView(w http.ResponseWriter, r *http.Request) {
@@ -58,7 +68,28 @@ func (app *Application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "%+v", snippet)
+	data := templateData{Snippet: snippet}
+
+	templates := []string{
+		"./ui/html/base.tmpl.html",
+		"./ui/html/partials/nav.tmpl.html",
+		"./ui/html/pages/view.tmpl.html",
+	}
+
+	tmp, err := template.ParseFiles(templates...)
+
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	err = tmp.ExecuteTemplate(w, "base", data)
+
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	// fmt.Fprintf(w, "%+v", snippet)
 	// w.Write([]byte(fmt.Sprintf("view snippet #%d...\n", id)))
 }
 

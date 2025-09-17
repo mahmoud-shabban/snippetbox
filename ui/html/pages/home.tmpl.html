@@ -1,0 +1,47 @@
+{{define "title"}}Home{{end}}
+{{define "main"}}
+<h2>Latest Snippets</h2>
+{{if .Snippets}}
+<table>
+    <tr>
+        <th>Title</th>
+        <th>Created</th>
+        <th>ID</th>
+    </tr>
+    {{range .Snippets}}
+    <tr>
+        <td><a href='/snippet/view/{{.ID}}'>{{.Title}}</a></td>
+        <td>{{.Created}}</td>
+        <td>#{{.ID}}</td>
+    </tr>
+    {{end}}
+</table>
+{{else}}
+<p>There's nothing to see here... yet!</p>
+{{end}}
+{{end}}
+
+{{/* my code and above the book code he did it as table */}}
+
+{{/*  {{define "title"}}Home{{end}}
+{{define "main"}}
+<h2>Latest Snippets</h2>
+{{if .Snipeets}}
+    {{range .Snipeets}}
+    <div class='snippet'>
+        <div class='metadata'>
+            <strong>{{.Title}}</strong>
+            <span>#{{.ID}}</span>
+        </div>
+        <pre><code>{{.Content}}</code></pre>
+        <div class='metadata'>
+            <time>Created: {{.Created}}</time>
+            <time>Expires: {{.Expires}}</time>
+        </div>
+    </div>
+    {{end}}
+{{else}}
+<p>There's nothing to see here yet!</p>
+{{end}}
+{{end}} 
+*/}}
