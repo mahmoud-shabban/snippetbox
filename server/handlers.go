@@ -11,14 +11,15 @@ import (
 )
 
 func (app *Application) test(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Server", "snippetBox")
-	w.Header().Set("erver", "GO")
+	// w.Header().Set("Server", "snippetBox")
+	// w.Header().Set("erver", "GO")
+	panic("Server is panicing, don't worry!!")
 	w.Write([]byte(r.PathValue("path")))
 }
 
 func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 
-	w.Header().Add("server", "GO")
+	// w.Header().Add("server", "GO")
 
 	snippets, err := app.snippets.Latest()
 
