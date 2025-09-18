@@ -114,10 +114,10 @@ func (app *Application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 type snippetCreateForm struct {
-	validator.Validator
-	Title   string
-	Content string
-	Expires int
+	validator.Validator `form:"-"`
+	Title               string `form:"title"`
+	Content             string `form:"content"`
+	Expires             int    `form:"expires"`
 	// Validations map[string]string
 }
 
@@ -141,11 +141,13 @@ func (app *Application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	}
 
 	// validations := make(map[string]string)
-	// formData.Validations = make(map[string]string)
-	form.Title = r.PostForm.Get("title")
-	form.Content = r.PostForm.Get("content")
+	// form.Validations = make(map[string]string)
+	// form.Title = r.PostForm.Get("title")
+	// form.Content = r.PostForm.Get("content")
 
-	form.Expires, err = strconv.Atoi(r.PostForm.Get("expires"))
+	// form.Expires, err = strconv.Atoi(r.PostForm.Get("expires"))
+
+	err = app.formDecoder.Decode(&form, r.PostForm)
 
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
@@ -156,21 +158,21 @@ func (app *Application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	form.CheckField(validator.MaxChars(form.Title, 100), "title", "title cannot be more than 100 characters long")
 	form.CheckField(validator.NotBlank(form.Content), "content", "content cannot be blank")
 	form.CheckField(validator.PermittedValue(form.Expires, 1, 7, 365), "expires", "allowed values 1, 7 or 365")
-	// if strings.TrimSpace(formData.Title) == "" {
-	// 	formData.Validations["title"] = "title cannot be blank"
-	// } else if utf8.RuneCountInString(formData.Title) > 100 {
-	// 	formData.Validations["title"] = "title cannot be more than 100 characters long"
+	// if strings.TrimSpace(form.Title) == "" {
+	// 	form.Validations["title"] = "title cannot be blank"
+	// } else if utf8.RuneCountInString(form.Title) > 100 {
+	// 	form.Validations["title"] = "title cannot be more than 100 characters long"
 	// }
 
-	// if strings.TrimSpace(formData.Content) == "" {
-	// 	formData.Validations["content"] = "content cannot be blank"
+	// if strings.TrimSpace(form.Content) == "" {
+	// 	form.Validations["content"] = "content cannot be blank"
 	// }
 
-	// if formData.Expires != 1 && formData.Expires != 7 && formData.Expires != 365 {
-	// 	formData.Validations["expires"] = "expires must be 1, 7 or 365"
+	// if form.Expires != 1 && form.Expires != 7 && form.Expires != 365 {
+	// 	form.Validations["expires"] = "expires must be 1, 7 or 365"
 	// }
 
-	// validateForm(&formData)
+	// validateForm(&form)
 
 	if !form.Valid() {
 		data := app.newTemplateData()

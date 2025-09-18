@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/mahmoud-shabban/snippetbox/internal/models"
 )
@@ -16,6 +17,7 @@ type Application struct {
 	logger        *slog.Logger
 	snippets      *models.SnippetModel
 	templateCache map[string]*template.Template
+	formDecoder   *form.Decoder
 }
 
 func main() {
@@ -54,11 +56,16 @@ func main() {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
+
+	// form decoder
+	decoder := form.NewDecoder()
+
 	// Initialize the APP and inject its dependencies
 	app := Application{
 		logger:        logger,
 		snippets:      &models.SnippetModel{DB: db},
 		templateCache: cache,
+		formDecoder:   decoder,
 	}
 
 	app.logger.Info("successfully connected to database")
