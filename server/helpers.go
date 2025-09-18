@@ -3,11 +3,14 @@ package main
 import (
 	"bytes"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/go-playground/form/v4"
 )
 
 func (app *Application) check(err error) {
@@ -102,3 +105,25 @@ func humanDate(t time.Time) string {
 // 	}
 
 // }
+
+func (app *Application) decodePostForm(r *http.Request, dst any) error {
+
+	err := r.ParseForm()
+	if err != nil {
+		return err
+	}
+
+	err = app.formDecoder.Decode(dst, r.PostForm)
+
+	if err != nil {
+
+		var invalidDecodeError *form.InvalidDecoderError
+		if errors.As(err, &invalidDecodeError) {
+			panic(err)
+		}
+
+		return err
+	}
+
+	return nil
+}

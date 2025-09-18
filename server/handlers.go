@@ -128,16 +128,21 @@ func (app *Application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	// content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
 	// expires := 10
 
-	err := r.ParseForm()
+	// err := r.ParseForm()
+
+	// extracting form data and making validations
+	// form := snippetCreateForm{
+	// 	Validator: validator.Validator{Errors: make(map[string]string)},
+	// }
+
+	// form := snippetCreateForm{}
+	var form snippetCreateForm
+
+	err := app.decodePostForm(r, &form)
 
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
-	}
-
-	// extracting form data and making validations
-	form := snippetCreateForm{
-		Validator: validator.Validator{Errors: make(map[string]string)},
 	}
 
 	// validations := make(map[string]string)
