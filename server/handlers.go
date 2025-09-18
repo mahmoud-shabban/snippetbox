@@ -6,18 +6,10 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
-	"strings"
-	"unicode/utf8"
 
 	"github.com/mahmoud-shabban/snippetbox/internal/models"
+	"github.com/mahmoud-shabban/snippetbox/internal/validator"
 )
-
-type snippetCreateForm struct {
-	Title       string
-	Content     string
-	Expires     int
-	Validations map[string]string
-}
 
 func (app *Application) test(w http.ResponseWriter, r *http.Request) {
 	// w.Header().Set("Server", "snippetBox")
@@ -121,6 +113,14 @@ func (app *Application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, http.StatusOK, "create", data)
 }
 
+type snippetCreateForm struct {
+	validator.Validator
+	Title   string
+	Content string
+	Expires int
+	// Validations map[string]string
+}
+
 func (app *Application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
 	// w.WriteHeader(http.StatusCreated)
 	// w.Write([]byte("save new snippet to DB...\n"))
@@ -136,40 +136,50 @@ func (app *Application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	}
 
 	// extracting form data and making validations
-	formData := snippetCreateForm{}
+	form := snippetCreateForm{
+		Validator: validator.Validator{Errors: make(map[string]string)},
+	}
+
 	// validations := make(map[string]string)
-	formData.Title = r.PostForm.Get("title")
-	formData.Content = r.PostForm.Get("content")
-	formData.Expires, err = strconv.Atoi(r.PostForm.Get("expires"))
-	formData.Validations = make(map[string]string)
+	// formData.Validations = make(map[string]string)
+	form.Title = r.PostForm.Get("title")
+	form.Content = r.PostForm.Get("content")
+
+	form.Expires, err = strconv.Atoi(r.PostForm.Get("expires"))
 
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 
-	if strings.TrimSpace(formData.Title) == "" {
-		formData.Validations["title"] = "title cannot be blank"
-	} else if utf8.RuneCountInString(formData.Title) > 100 {
-		formData.Validations["title"] = "title cannot be more than 100 characters long"
-	}
+	form.CheckField(validator.NotBlank(form.Title), "title", "title cannot be blank")
+	form.CheckField(validator.MaxChars(form.Title, 100), "title", "title cannot be more than 100 characters long")
+	form.CheckField(validator.NotBlank(form.Content), "content", "content cannot be blank")
+	form.CheckField(validator.PermittedValue(form.Expires, 1, 7, 365), "expires", "allowed values 1, 7 or 365")
+	// if strings.TrimSpace(formData.Title) == "" {
+	// 	formData.Validations["title"] = "title cannot be blank"
+	// } else if utf8.RuneCountInString(formData.Title) > 100 {
+	// 	formData.Validations["title"] = "title cannot be more than 100 characters long"
+	// }
 
-	if strings.TrimSpace(formData.Content) == "" {
-		formData.Validations["content"] = "content cannot be blank"
-	}
+	// if strings.TrimSpace(formData.Content) == "" {
+	// 	formData.Validations["content"] = "content cannot be blank"
+	// }
 
-	if formData.Expires != 1 && formData.Expires != 7 && formData.Expires != 365 {
-		formData.Validations["expires"] = "expires must be 1, 7 or 365"
-	}
+	// if formData.Expires != 1 && formData.Expires != 7 && formData.Expires != 365 {
+	// 	formData.Validations["expires"] = "expires must be 1, 7 or 365"
+	// }
 
-	if len(formData.Validations) > 0 {
+	// validateForm(&formData)
+
+	if !form.Valid() {
 		data := app.newTemplateData()
-		data.Form = formData
+		data.Form = form
 		app.render(w, r, http.StatusUnprocessableEntity, "create", data)
 		return
 	}
 
-	id, err := app.snippets.Insert(formData.Title, formData.Content, formData.Expires)
+	id, err := app.snippets.Insert(form.Title, form.Content, form.Expires)
 	if err != nil {
 		app.serverError(w, r, err)
 	}

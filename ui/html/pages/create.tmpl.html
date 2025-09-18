@@ -3,14 +3,14 @@
 <form action='/snippet/create' method='POST'>
     <div>
         <label>Title:</label>
-        {{with .Form.Validations.title}}
+        {{with .Form.Validator.Errors.title}}
         <label class='error'>{{.}}</label>
         {{end}}
         <input type='text' name='title' value='{{.Form.Title}}'>
     </div>
     <div>
         <label>Content:</label>
-        {{with .Form.Validations.content}}
+        {{with .Form.Validator.Errors.content}}
         <label class='error'>{{.}}</label>
         {{end}}
         <textarea name='content'>{{.Form.Content}}</textarea>
@@ -18,7 +18,7 @@
     <div>
         <label>Delete in:</label>
         <!-- And render the value of .Form.FieldErrors.expires if it is not empty. -->
-        {{with .Form.Validations.expires}}
+        {{with .Form.Validator.Errors.expires}}
         <label class='error'>{{.}}</label>
         {{end}}
         <!-- Here we use the `if` action to check if the value of the re-populated
