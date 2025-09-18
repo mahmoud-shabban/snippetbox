@@ -7,17 +7,21 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/mahmoud-shabban/snippetbox/internal/models"
 )
 
 type Application struct {
-	logger        *slog.Logger
-	snippets      *models.SnippetModel
-	templateCache map[string]*template.Template
-	formDecoder   *form.Decoder
+	logger         *slog.Logger
+	snippets       *models.SnippetModel
+	templateCache  map[string]*template.Template
+	formDecoder    *form.Decoder
+	sessionManager *scs.SessionManager
 }
 
 func main() {
@@ -60,12 +64,18 @@ func main() {
 	// form decoder
 	decoder := form.NewDecoder()
 
+	// session manager
+	sessionManager := scs.New()
+	sessionManager.Store = mysqlstore.New(db)
+	sessionManager.Lifetime = 12 * time.Hour
+
 	// Initialize the APP and inject its dependencies
 	app := Application{
-		logger:        logger,
-		snippets:      &models.SnippetModel{DB: db},
-		templateCache: cache,
-		formDecoder:   decoder,
+		logger:         logger,
+		snippets:       &models.SnippetModel{DB: db},
+		templateCache:  cache,
+		formDecoder:    decoder,
+		sessionManager: sessionManager,
 	}
 
 	app.logger.Info("successfully connected to database")
