@@ -1,16 +1,18 @@
 {{define "title"}} Create Snippet {{end}}
 {{define "main"}}
 <form action='/snippet/create' method='POST'>
+    <!-- Include the CSRF token -->
+    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
     <div>
         <label>Title:</label>
-        {{with .Form.Validator.Errors.title}}
+        {{with .Form.Validator.FieldErrors.title}}
         <label class='error'>{{.}}</label>
         {{end}}
         <input type='text' name='title' value='{{.Form.Title}}'>
     </div>
     <div>
         <label>Content:</label>
-        {{with .Form.Validator.Errors.content}}
+        {{with .Form.Validator.FieldErrors.content}}
         <label class='error'>{{.}}</label>
         {{end}}
         <textarea name='content'>{{.Form.Content}}</textarea>
@@ -18,7 +20,7 @@
     <div>
         <label>Delete in:</label>
         <!-- And render the value of .Form.FieldErrors.expires if it is not empty. -->
-        {{with .Form.Validator.Errors.expires}}
+        {{with .Form.Validator.FieldErrors.expires}}
         <label class='error'>{{.}}</label>
         {{end}}
         <!-- Here we use the `if` action to check if the value of the re-populated

@@ -11,13 +11,22 @@ func (app *Application) routes() http.Handler {
 	mux := http.NewServeMux()
 
 	// dynamic middleware is midllewares that need to work on specific handlers only
-	dynamic := alice.New(app.sessionManager.LoadAndSave)
+	dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf)
 
 	mux.Handle("GET /{$}", dynamic.ThenFunc(app.home)) // GET method also works with HEAD only one method is allowed in this form of definition
 	mux.Handle("GET /snippet/view/{id}", dynamic.ThenFunc(app.snippetView))
-	mux.Handle("GET /snippet/create", dynamic.ThenFunc(app.snippetCreate))
-	mux.Handle("POST /snippet/create", dynamic.ThenFunc(app.snippetCreatePost))
 
+	// user routes
+	mux.Handle("GET /user/signup", dynamic.ThenFunc(app.userSignup))
+	mux.Handle("POST /user/signup", dynamic.ThenFunc(app.userSignupPost))
+	mux.Handle("GET /user/login", dynamic.ThenFunc(app.userLogin))
+	mux.Handle("POST /user/login", dynamic.ThenFunc(app.userLoginPost))
+
+	// csrf protected endpoints
+	protected := dynamic.Append(app.requireAuthentication)
+	mux.Handle("GET /snippet/create", protected.ThenFunc(app.snippetCreate))
+	mux.Handle("POST /snippet/create", protected.ThenFunc(app.snippetCreatePost))
+	mux.Handle("POST /user/logout", protected.ThenFunc(app.userLogoutPost))
 	// test endpoint
 	mux.HandleFunc("/test", app.test)
 

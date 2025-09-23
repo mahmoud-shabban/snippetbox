@@ -19,6 +19,7 @@ import (
 type Application struct {
 	logger         *slog.Logger
 	snippets       *models.SnippetModel
+	users          *models.UserModel
 	templateCache  map[string]*template.Template
 	formDecoder    *form.Decoder
 	sessionManager *scs.SessionManager
@@ -34,7 +35,7 @@ func main() {
 	dbHost := "127.0.0.1" //"192.168.0.134"
 	dbName := "snippetbox"
 
-	// server
+	// server data
 	addr := flag.String("addr", ":8080", "http server address:port")
 	dsn := flag.String("dsn", fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true", userName, password, dbHost, dbName), "db connection string (dsn)")
 	flag.Parse()
@@ -73,15 +74,24 @@ func main() {
 	app := Application{
 		logger:         logger,
 		snippets:       &models.SnippetModel{DB: db},
+		users:          &models.UserModel{DB: db},
 		templateCache:  cache,
 		formDecoder:    decoder,
 		sessionManager: sessionManager,
 	}
 
+	// http server
+	serv := &http.Server{
+		Addr:        *addr,
+		Handler:     app.routes(),
+		ErrorLog:    slog.NewLogLogger(logger.Handler(), slog.LevelError),
+		IdleTimeout: 1 * time.Minute,
+	}
+
 	app.logger.Info("successfully connected to database")
 	app.logger.Info("successfully initialized template cache")
-	app.logger.Info("server started", slog.Any("address", *addr))
-
+	app.logger.Info("server starting at", slog.Any("address", *addr))
 	// Start the Server
-	app.check(http.ListenAndServe(*addr, app.routes()))
+	// app.check(http.ListenAndServe(*addr, app.routes()))
+	app.check(serv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem"))
 }
