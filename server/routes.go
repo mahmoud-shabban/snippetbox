@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/justinas/alice"
+	"github.com/mahmoud-shabban/snippetbox/ui"
 )
 
 func (app *Application) routes() http.Handler {
@@ -31,7 +32,7 @@ func (app *Application) routes() http.Handler {
 	mux.HandleFunc("/test", app.test)
 
 	// file server
-	fileserver := http.FileServer(http.Dir("./ui/static"))
+	fileserver := http.FileServerFS(ui.Files)
 	mux.Handle("/static/", http.StripPrefix("/static", fileserver))
 
 	// return app.recoverPanic(app.logRequest(commonHeaders(mux)))
