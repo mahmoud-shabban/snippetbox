@@ -11,7 +11,7 @@ func (app *Application) routes() http.Handler {
 	mux := http.NewServeMux()
 
 	// dynamic middleware is midllewares that need to work on specific handlers only
-	dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf)
+	dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate)
 
 	mux.Handle("GET /{$}", dynamic.ThenFunc(app.home)) // GET method also works with HEAD only one method is allowed in this form of definition
 	mux.Handle("GET /snippet/view/{id}", dynamic.ThenFunc(app.snippetView))
