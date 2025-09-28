@@ -28,12 +28,11 @@ func (app *Application) routes() http.Handler {
 	mux.Handle("GET /snippet/create", protected.ThenFunc(app.snippetCreate))
 	mux.Handle("POST /snippet/create", protected.ThenFunc(app.snippetCreatePost))
 	mux.Handle("POST /user/logout", protected.ThenFunc(app.userLogoutPost))
-	// test endpoint
-	mux.HandleFunc("/test", app.test)
 
 	// file server
 	fileserver := http.FileServerFS(ui.Files)
-	mux.Handle("/static/", http.StripPrefix("/static", fileserver))
+	// mux.Handle("/static/", http.StripPrefix("/static", fileserver))
+	mux.Handle("GET /static/", fileserver)
 
 	// return app.recoverPanic(app.logRequest(commonHeaders(mux)))
 

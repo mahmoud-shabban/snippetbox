@@ -91,6 +91,7 @@ func main() {
 	app.logger.Info("successfully connected to database")
 	app.logger.Info("successfully initialized template cache")
 	app.logger.Info("server starting at", slog.Any("address", *addr))
+
 	// Start the Server
 	// app.check(http.ListenAndServe(*addr, app.routes()))
 	app.check(serv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem"))

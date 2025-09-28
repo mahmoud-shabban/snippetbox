@@ -93,23 +93,6 @@ func humanDate(t time.Time) string {
 	return t.Format("02 Jan 2006 at 15:04")
 }
 
-// func validateForm(formData *snippetCreateForm) {
-// 	if strings.TrimSpace(formData.Title) == "" {
-// 		formData.Validations["title"] = "title cannot be blank"
-// 	} else if utf8.RuneCountInString(formData.Title) > 100 {
-// 		formData.Validations["title"] = "title cannot be more than 100 characters long"
-// 	}
-
-// 	if strings.TrimSpace(formData.Content) == "" {
-// 		formData.Validations["content"] = "content cannot be blank"
-// 	}
-
-// 	if formData.Expires != 1 && formData.Expires != 7 && formData.Expires != 365 {
-// 		formData.Validations["expires"] = "expires must be 1, 7 or 365"
-// 	}
-
-// }
-
 func (app *Application) decodePostForm(r *http.Request, dst any) error {
 
 	err := r.ParseForm()

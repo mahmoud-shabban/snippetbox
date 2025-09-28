@@ -20,10 +20,6 @@ type templateData struct {
 	CSRFToken       string
 }
 
-// var funcMap = template.FuncMap{
-// 	"humanDate": humanDate,
-// }
-
 func newTemplateCache() (map[string]*template.Template, error) {
 
 	var funcMap = template.FuncMap{
@@ -50,10 +46,8 @@ func newTemplateCache() (map[string]*template.Template, error) {
 			f,
 		}
 
-		// temps = append(temps, partials...)
 		t, err := template.New("").Funcs(funcMap).ParseFS(
 			ui.Files,
-			//"./ui/html/partials/nav.tmpl.html",
 			append(temps, partials...)...,
 		)
 
