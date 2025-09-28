@@ -42,7 +42,7 @@ func main() {
 
 	// logger
 	var loggerOptions *slog.HandlerOptions = &slog.HandlerOptions{
-		AddSource: true,
+		// AddSource: true,
 	}
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, loggerOptions))
 
