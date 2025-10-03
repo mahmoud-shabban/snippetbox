@@ -34,7 +34,7 @@ func (app *Application) routes() http.Handler {
 	// mux.Handle("/static/", http.StripPrefix("/static", fileserver))
 	mux.Handle("GET /static/", fileserver)
 
-	mux.HandleFunc("GET /healthz", app.ping)
+	mux.HandleFunc("GET /healthz", ping)
 	// return app.recoverPanic(app.logRequest(commonHeaders(mux)))
 
 	// standard is the middleware chain that works on all routes

@@ -31,7 +31,7 @@ type userLoginForm struct {
 	Password            string `form:"password"`
 }
 
-func (app *Application) ping(w http.ResponseWriter, r *http.Request) {
+func ping(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("ok!"))
 }
 
