@@ -90,7 +90,12 @@ func (app *Application) newTemplateData(r *http.Request) templateData {
 }
 
 func humanDate(t time.Time) string {
-	return t.Format("02 Jan 2006 at 15:04")
+
+	if t.IsZero() {
+		return ""
+	}
+
+	return t.Local().Format("02 Jan 2006 at 15:04")
 }
 
 func (app *Application) decodePostForm(r *http.Request, dst any) error {

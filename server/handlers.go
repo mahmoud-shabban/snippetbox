@@ -31,6 +31,10 @@ type userLoginForm struct {
 	Password            string `form:"password"`
 }
 
+func (app *Application) ping(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("ok!"))
+}
+
 func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 
 	snippets, err := app.snippets.Latest()
